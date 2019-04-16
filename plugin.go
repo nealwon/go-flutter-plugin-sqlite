@@ -40,7 +40,7 @@ const (
 	PARAM_SINGLE_INSTANCE = "singleInstance"; // boolean
 	// Result when opening a database
 	PARAM_RECOVERED         = "recovered";
-	PARAM_QUERY_AS_MAP_LIST = "queryAsMapList";        // boolean
+	PARAM_QUERY_AS_MAP_LIST = "queryAsMapList"; // boolean
 
 	PARAM_SQL               = "sql";
 	PARAM_SQL_ARGUMENTS     = "arguments";
@@ -82,6 +82,15 @@ type SqflitePlugin struct {
 }
 
 var _ flutter.Plugin = &SqflitePlugin{} // compile-time type check
+
+func NewSqflitePlugin(vendor, appName string) *SqflitePlugin {
+	return &SqflitePlugin{
+		VendorName:      vendor,
+		ApplicationName: appName,
+		databases:       make(map[int32]*sql.DB),
+		databasePaths:   make(map[int32]string),
+	}
+}
 
 func (p *SqflitePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	if p.VendorName == "" {
@@ -358,12 +367,12 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 		}
 	}
 	var icols []interface{}
-	for _, col:=range cols {
+	for _, col := range cols {
 		icols = append(icols, col)
 	}
 	return map[interface{}]interface{}{
 		"columns": icols,
-		"rows": resultRows,
+		"rows":    resultRows,
 	}, nil
 }
 
@@ -429,7 +438,7 @@ func (p *SqflitePlugin) getSqlCommand(arguments interface{}) (sqlStr string, xar
 		return "", nil, errors.New("SQL is empty")
 	}
 	targs, ok := args[PARAM_SQL_ARGUMENTS]
-	if ok && targs!=nil {
+	if ok && targs != nil {
 		xargs, _ = targs.([]interface{})
 	}
 	return
