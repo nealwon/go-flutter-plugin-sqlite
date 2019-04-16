@@ -41,7 +41,6 @@ const (
 	// Result when opening a database
 	PARAM_RECOVERED         = "recovered";
 	PARAM_QUERY_AS_MAP_LIST = "queryAsMapList";        // boolean
-	PARAM_THREAD_PRIORITY   = "androidThreadPriority"; // int
 
 	PARAM_SQL               = "sql";
 	PARAM_SQL_ARGUMENTS     = "arguments";
@@ -66,9 +65,6 @@ const (
 
 	// memory database path
 	MEMORY_DATABASE_PATH = ":memory:";
-
-	// android log tag
-	TAG = "Sqflite";
 )
 
 type SqflitePlugin struct {
@@ -78,9 +74,9 @@ type SqflitePlugin struct {
 
 	userConfigFolder string
 	codec            plugin.StandardMessageCodec
-	databases        map[int]*sql.DB // store database handlers
-	databasePaths    map[int]string  // store database file path
-	databaseId       int             // store max database id
+	databases        map[int32]*sql.DB // store database handlers
+	databasePaths    map[int32]string  // store database file path
+	databaseId       int32             // store max database id
 
 	queryAsMapList bool
 }
@@ -146,10 +142,10 @@ func (p *SqflitePlugin) handleGetDatabasePath(arguments interface{}) (reply inte
 func (p *SqflitePlugin) handleOptions(arguments interface{}) (reply interface{}, err error) {
 	var args map[string]interface{}
 	var ok bool
-	if args,ok=arguments.(map[string]interface{});!ok {
+	if args, ok = arguments.(map[string]interface{}); !ok {
 		return nil, errors.New("invalid param for option call")
 	}
-	paramAsList,ok := args["PARAM_QUERY_AS_MAP_LIST"]
+	paramAsList, ok := args["PARAM_QUERY_AS_MAP_LIST"]
 	if ok {
 		p.queryAsMapList = paramAsList.(bool)
 	}
@@ -170,9 +166,10 @@ func (p *SqflitePlugin) handleCloseDatabase(arguments interface{}) (reply interf
 }
 
 func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interface{}, err error) {
+	// map[interface {}]interface {}{"path":"/Users/kael/Library/Application Support/libCachedImageData.db", "singleInstance":true}
 	var ok bool
-	var args map[string]interface{}
-	if args, ok = arguments.(map[string]interface{}); !ok {
+	var args map[interface{}]interface{}
+	if args, ok = arguments.(map[interface{}]interface{}); !ok {
 		return nil, errors.New("invalid arguments")
 	}
 	var dbpath string
@@ -181,30 +178,30 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 	if dpath, ok := args[PARAM_PATH]; ok {
 		dbpath = dpath.(string)
 	}
-	if rdo,ok:=args[PARAM_READ_ONLY];ok {
+	if rdo, ok := args[PARAM_READ_ONLY]; ok {
 		readOnly = rdo.(bool)
 	}
-	if si,ok:=args[PARAM_SINGLE_INSTANCE];ok{
-		singleInstance = si.(bool) && MEMORY_DATABASE_PATH!=dbpath
+	if si, ok := args[PARAM_SINGLE_INSTANCE]; ok {
+		singleInstance = si.(bool) && MEMORY_DATABASE_PATH != dbpath
 	}
 	if dbpath == "" {
 		log.Printf(errorFormat, "invalid dbpath")
 		return nil, errors.New("invalid dbpath")
 	}
-	if readOnly{
+	if readOnly {
 		log.Printf(errorFormat, "readonly not supported")
 	}
-	if MEMORY_DATABASE_PATH!=dbpath {
+	if MEMORY_DATABASE_PATH != dbpath {
 		err = os.MkdirAll(path.Dir(dbpath), 0755)
 		if err != nil {
 			log.Printf(errorFormat, err.Error())
 		}
 	}
 	if singleInstance {
-		dbId,ok:=p.getDatabaseByPath(dbpath)
+		dbId, ok := p.getDatabaseByPath(dbpath)
 		if ok {
-			return map[string]interface{}{
-				PARAM_ID: dbId,
+			return map[interface{}]interface{}{
+				PARAM_ID:        dbId,
 				PARAM_RECOVERED: true,
 			}, nil
 		}
@@ -219,57 +216,57 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 	p.databaseId++
 	p.databases[p.databaseId] = engine
 	p.databasePaths[p.databaseId] = dbpath
-	return map[string]interface{}{
-		PARAM_ID: p.databaseId,
+	return map[interface{}]interface{}{
+		PARAM_ID:        p.databaseId,
 		PARAM_RECOVERED: false,
 	}, nil
 }
 
 func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, err error) {
-	_, db,err:=p.getDatabase(arguments)
-	if err!=nil{
-		return 0,err
+	_, db, err := p.getDatabase(arguments)
+	if err != nil {
+		return 0, err
 	}
-	sqlStr,args,err := p.getSqlCommand(arguments)
-	if err!=nil{
-		return nil,err
+	sqlStr, args, err := p.getSqlCommand(arguments)
+	if err != nil {
+		return nil, err
 	}
-	result,err:=db.Exec(sqlStr, args)
-	if err!=nil{
+	result, err := db.Exec(sqlStr, args)
+	if err != nil {
 		return 0, err
 	}
 	return result.LastInsertId()
 }
 
 func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, err error) {
-	_,db,err:=p.getDatabase(arguments)
-	if err!=nil{
-		return nil,err
+	_, db, err := p.getDatabase(arguments)
+	if err != nil {
+		return nil, err
 	}
-	args,ok:=arguments.(map[string]interface{})
+	args, ok := arguments.(map[string]interface{})
 	if !ok {
 		return nil, errors.New("invalid args")
 	}
-	ioperations,ok:=args[PARAM_OPERATIONS]
-	if !ok{
+	ioperations, ok := args[PARAM_OPERATIONS]
+	if !ok {
 		return nil, errors.New("invalid operation")
 	}
-	operations, ok:=ioperations.([]map[string]interface{})
+	operations, ok := ioperations.([]map[string]interface{})
 	if !ok {
-		return  nil, errors.New("invalid operation data format")
+		return nil, errors.New("invalid operation data format")
 	}
-	for _,operate:=range operations {
-		mtd,ok:=operate[PARAM_METHOD]
+	for _, operate := range operations {
+		mtd, ok := operate[PARAM_METHOD]
 		if !ok {
-			return nil,errors.New("empty method")
+			return nil, errors.New("empty method")
 		}
-		method,ok := mtd.(string)
+		method, ok := mtd.(string)
 		if !ok {
-			return  nil, errors.New("invalid method")
+			return nil, errors.New("invalid method")
 		}
-		sqlStr,xargs,err:=p.getSqlCommand(operate)
-		if err!=nil{
-			return nil,err
+		sqlStr, xargs, err := p.getSqlCommand(operate)
+		if err != nil {
+			return nil, err
 		}
 		switch method {
 		case METHOD_UPDATE:
@@ -277,14 +274,14 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 		case METHOD_INSERT:
 			fallthrough
 		case METHOD_EXECUTE:
-			_,err=db.Exec(sqlStr, xargs)
-			if err!=nil{
-				return nil,err
+			_, err = db.Exec(sqlStr, xargs...)
+			if err != nil {
+				return nil, err
 			}
 		case METHOD_QUERY:
-			_,err=db.Query(sqlStr, xargs)
-			if err!=nil{
-				return nil,err
+			_, err = db.Query(sqlStr, xargs...)
+			if err != nil {
+				return nil, err
 			}
 		default:
 			return nil, errors.New("Invalid batch param")
@@ -299,68 +296,75 @@ func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{
 }
 
 func (p *SqflitePlugin) handleExecute(arguments interface{}) (reply interface{}, err error) {
-	_, db,err:=p.getDatabase(arguments)
-	if err!=nil{
-		return nil,err
+	_, db, err := p.getDatabase(arguments)
+	if err != nil {
+		return nil, err
 	}
-	sqlStr,args,err := p.getSqlCommand(arguments)
-	if err!=nil{
-		return nil,err
+	sqlStr, args, err := p.getSqlCommand(arguments)
+	if err != nil {
+		return nil, err
 	}
-	_,err=db.Exec(sqlStr, args)
-	if err!=nil{
+	_, err = db.Exec(sqlStr, args...)
+	if err != nil {
 		return nil, err
 	}
 	return nil, nil
 }
 
 func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, err error) {
-	_, db,err:=p.getDatabase(arguments)
-	if err!=nil{
-		return 0,err
+	_, db, err := p.getDatabase(arguments)
+	if err != nil {
+		return 0, err
 	}
-	sqlStr,args,err := p.getSqlCommand(arguments)
-	if err!=nil{
-		return nil,err
+	sqlStr, args, err := p.getSqlCommand(arguments)
+	if err != nil {
+		return nil, err
 	}
-	result,err:=db.Exec(sqlStr, args)
-	if err!=nil{
+	result, err := db.Exec(sqlStr, args...)
+	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
 func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, err error) {
-	_, db,err:=p.getDatabase(arguments)
-	if err!=nil{
-		return nil,err
-	}
-	sqlStr,args,err := p.getSqlCommand(arguments)
-	if err!=nil{
-		return nil,err
-	}
-	rows,err:=db.Query(sqlStr, args)
-	if err!=nil{
+	_, db, err := p.getDatabase(arguments)
+	if err != nil {
 		return nil, err
 	}
-	cols,err:=rows.Columns()
-	if err!=nil{
+	sqlStr, args, err := p.getSqlCommand(arguments)
+	if err != nil {
 		return nil, err
 	}
-	var resultRows []map[string]interface{}
+	rows, err := db.Query(sqlStr, args...)
+	if err != nil {
+		return nil, err
+	}
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	var resultRows []interface{}
 	for {
-		resultRow := make(map[string]interface{})
-		dest:=make([]interface{}, len(cols))
+		var resultRow []interface{}
+		dest := make([]interface{}, len(cols))
 		err = rows.Scan(dest...)
-		for idx,col:=range cols {
-			resultRow[col] = dest[idx]
+		for _, cval := range dest {
+			resultRow = append(resultRow, cval)
 		}
 		resultRows = append(resultRows, resultRow)
 		if !rows.Next() {
 			break
 		}
 	}
-	return resultRows, nil
+	var icols []interface{}
+	for _, col:=range cols {
+		icols = append(icols, col)
+	}
+	return map[interface{}]interface{}{
+		"columns": icols,
+		"rows": resultRows,
+	}, nil
 }
 
 func (p *SqflitePlugin) handleDatabaseExists(arguments interface{}) (reply interface{}, err error) {
@@ -368,42 +372,42 @@ func (p *SqflitePlugin) handleDatabaseExists(arguments interface{}) (reply inter
 }
 
 func (p *SqflitePlugin) handleDeleteDatabase(arguments interface{}) (reply interface{}, err error) {
-	if dbPath,ok:=arguments.(string);ok {
-		if dbPath!=MEMORY_DATABASE_PATH {
+	if dbPath, ok := arguments.(string); ok {
+		if dbPath != MEMORY_DATABASE_PATH {
 			err = os.Remove(dbPath)
 		}
 	}
 	return nil, err
 }
 
-func (p *SqflitePlugin) getDatabase(arguments interface{}) (int, *sql.DB, error) {
-	var args map[string]interface{}
+func (p *SqflitePlugin) getDatabase(arguments interface{}) (int32, *sql.DB, error) {
+	var args map[interface{}]interface{}
 	var ok bool
-	if args,ok=arguments.(map[string]interface{});!ok {
+	if args, ok = arguments.(map[interface{}]interface{}); !ok {
 		return -1, nil, errors.New("db not found")
 	}
-	if dbId,ok:=args[PARAM_ID];ok{
+	if dbId, ok := args[PARAM_ID]; ok {
 		p.Lock()
 		defer p.Unlock()
-		id,ok:=dbId.(int)
+		id, ok := dbId.(int32)
 		if !ok {
 			return -1, nil, errors.New("Invaid db id")
 		}
-		if db,ok:=p.databases[id];ok {
+		if db, ok := p.databases[id]; ok {
 			return id, db, nil
 		}
 	}
 	return -1, nil, errors.New("invalid database")
 }
 
-func (p *SqflitePlugin) getDatabaseByPath(dbPath string) (int, bool) {
-	if dbPath==MEMORY_DATABASE_PATH{
+func (p *SqflitePlugin) getDatabaseByPath(dbPath string) (int32, bool) {
+	if dbPath == MEMORY_DATABASE_PATH {
 		return -1, false
 	}
 	p.Lock()
 	defer p.Unlock()
-	for id,pt:= range p.databasePaths {
-		if pt==dbPath {
+	for id, pt := range p.databasePaths {
+		if pt == dbPath {
 			return id, true
 		}
 	}
@@ -411,22 +415,22 @@ func (p *SqflitePlugin) getDatabaseByPath(dbPath string) (int, bool) {
 }
 
 func (p *SqflitePlugin) getSqlCommand(arguments interface{}) (sqlStr string, xargs []interface{}, err error) {
-	var args map[string]interface{}
+	var args map[interface{}]interface{}
 	var ok bool
-	if args,ok=arguments.(map[string]interface{});!ok {
+	if args, ok = arguments.(map[interface{}]interface{}); !ok {
 		return "", nil, errors.New("db not found")
 	}
-	tsql,ok:=args[PARAM_SQL]
+	tsql, ok := args[PARAM_SQL]
 	if !ok {
-		return "",nil, errors.New("SQL is not set")
+		return "", nil, errors.New("SQL is not set")
 	}
 	sqlStr = tsql.(string)
-	if sqlStr=="" {
+	if sqlStr == "" {
 		return "", nil, errors.New("SQL is empty")
 	}
-	targs,ok:=args[PARAM_SQL_ARGUMENTS]
-	if ok {
-		xargs,_=targs.([]interface{})
+	targs, ok := args[PARAM_SQL_ARGUMENTS]
+	if ok && targs!=nil {
+		xargs, _ = targs.([]interface{})
 	}
 	return
 }

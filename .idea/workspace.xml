@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8417b865-745e-472f-866e-5560318e14f9" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugin.go" beforeDir="false" afterPath="$PROJECT_DIR$/plugin.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,16 +15,52 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugin.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-98">
-              <caret line="329" column="32" lean-forward="true" selection-start-line="329" selection-start-column="32" selection-end-line="329" selection-end-column="32" />
+            <state relative-caret-position="476">
+              <caret line="43" lean-forward="true" selection-start-line="43" selection-end-line="43" />
               <folding>
+                <element signature="e#1078#1088#0" expanded="true" />
                 <element signature="n#!!block;n#handleGetPlatformVersion#0" />
                 <element signature="n#!!block;n#handleGetDatabasePath#0" />
                 <element signature="n#!!block;n#handleOptions#0" />
-                <element signature="n#!!block;n#handleCloseDatabase#0" />
-                <element signature="n#!!block;n#handleExecute#0" />
+                <element signature="n#!!block;n#handleOpenDatabase#0" />
                 <element signature="n#!!block;n#handleDeleteDatabase#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/method-channel.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="476">
+              <caret line="168" column="62" lean-forward="true" selection-start-line="168" selection-start-column="62" selection-end-line="168" selection-end-column="62" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/codec.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="425">
+              <caret line="27" column="4" selection-start-line="27" selection-start-column="4" selection-end-line="27" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/standard-method-codec.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="336">
+              <caret line="70" column="25" selection-start-line="70" selection-start-column="25" selection-end-line="70" selection-end-column="25" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/standard-message-codec.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-873">
+              <caret line="278" column="62" lean-forward="true" selection-start-line="278" selection-start-column="62" selection-end-line="278" selection-end-column="62" />
             </state>
           </provider>
         </entry>
@@ -75,7 +110,11 @@
     <findStrings>
       <find>static final String</find>
       <find>userConfigFolder</find>
+      <find>failed to encode</find>
     </findStrings>
+    <dirStrings>
+      <dir>$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0</dir>
+    </dirStrings>
   </component>
   <component name="GOROOT" path="$PROJECT_DIR$/../../../../../../apps/go" />
   <component name="Git.Settings">
@@ -124,6 +163,11 @@
               <item name="go-flutter-plugin-sqlite" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
+            <path>
+              <item name="go-flutter-plugin-sqlite" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="Go Modules &lt;github.com/nealwon/go-flutter-plugin-sqlite&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -158,7 +202,7 @@
     <frame x="0" y="23" width="1920" height="1177" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24973376" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24973376" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -172,7 +216,7 @@
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Database Changes" order="10" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3299539" />
+      <window_info anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3299539" />
       <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" weight="0.3299539" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -240,16 +284,51 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/codec.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="27" column="4" selection-start-line="27" selection-start-column="4" selection-end-line="27" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/method-channel.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="168" column="62" lean-forward="true" selection-start-line="168" selection-start-column="62" selection-end-line="168" selection-end-column="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/json-method-codec.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="234">
+          <caret line="47" column="25" selection-start-line="47" selection-start-column="25" selection-end-line="47" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/standard-method-codec.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="70" column="25" selection-start-line="70" selection-start-column="25" selection-end-line="70" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/go-flutter-desktop/go-flutter@v0.14.0/plugin/standard-message-codec.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-873">
+          <caret line="278" column="62" lean-forward="true" selection-start-line="278" selection-start-column="62" selection-end-line="278" selection-end-column="62" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/plugin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-98">
-          <caret line="329" column="32" lean-forward="true" selection-start-line="329" selection-start-column="32" selection-end-line="329" selection-end-column="32" />
+        <state relative-caret-position="476">
+          <caret line="43" lean-forward="true" selection-start-line="43" selection-end-line="43" />
           <folding>
+            <element signature="e#1078#1088#0" expanded="true" />
             <element signature="n#!!block;n#handleGetPlatformVersion#0" />
             <element signature="n#!!block;n#handleGetDatabasePath#0" />
             <element signature="n#!!block;n#handleOptions#0" />
-            <element signature="n#!!block;n#handleCloseDatabase#0" />
-            <element signature="n#!!block;n#handleExecute#0" />
+            <element signature="n#!!block;n#handleOpenDatabase#0" />
             <element signature="n#!!block;n#handleDeleteDatabase#0" />
           </folding>
         </state>
