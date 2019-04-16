@@ -238,7 +238,7 @@ func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, 
 	if err!=nil{
 		return 0, err
 	}
-	return result.LastInsertId(), nil
+	return result.LastInsertId()
 }
 
 func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, err error) {
@@ -327,7 +327,7 @@ func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, 
 	if err!=nil{
 		return 0, err
 	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected()
 }
 
 func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, err error) {
