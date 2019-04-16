@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8417b865-745e-472f-866e-5560318e14f9" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plugin.go" beforeDir="false" afterPath="$PROJECT_DIR$/plugin.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,15 +16,56 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/plugin.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="425">
-              <caret line="212" selection-start-line="212" selection-end-line="212" />
+            <state relative-caret-position="-85">
+              <caret line="243" column="90" selection-start-line="243" selection-start-column="90" selection-end-line="243" selection-end-column="90" />
               <folding>
                 <element signature="e#23#223#0" expanded="true" />
-                <element signature="e#1037#1047#0" expanded="true" />
-                <element signature="n#!!block;n#handleBatch#3" />
-                <element signature="n#!!block;n#handleCloseDatabase#1" />
-                <element signature="e#6825#6927#0" expanded="true" />
+                <element signature="e#1078#1088#0" expanded="true" />
+                <element signature="n#!!block;n#handleGetPlatformVersion#0" />
+                <element signature="n#!!block;n#handleGetDatabasePath#0" />
+                <element signature="n#!!block;n#handleOptions#0" />
+                <element signature="n#!!block;n#handleCloseDatabase#0" />
+                <element signature="n#!!block;n#handleOpenDatabase#0" />
+                <element signature="n#!!block;n#handleTempDir#0" />
+                <element signature="n#!!block;n#handleAppDir#0" />
+                <element signature="n#!!block;n#handleBatch#1" />
+                <element signature="n#!!block;n#handleExecute#0" />
+                <element signature="n#!!block;n#handleExecute#1" />
+                <element signature="n#!!block;n#handleExecute#2" />
+                <element signature="n#!!block;n#handleDeleteDatabase#0" />
+                <element signature="e#6988#6993#0" />
+                <element signature="e#8234#8239#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../apps/go/src/database/sql/sql.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="349">
+              <caret line="2954" column="26" selection-start-line="2954" selection-start-column="26" selection-end-line="2954" selection-end-column="26" />
+              <folding>
+                <element signature="e#81847#81916#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../apps/go/src/database/sql/convert.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-3173">
+              <caret line="216" column="29" lean-forward="true" selection-start-line="216" selection-start-column="29" selection-end-line="216" selection-end-column="29" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/mattn/go-sqlite3@v1.9.0/_example/simple/simple.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="306">
+              <caret line="54" column="23" selection-start-line="54" selection-start-column="19" selection-end-line="54" selection-end-column="23" />
             </state>
           </provider>
         </entry>
@@ -33,6 +75,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>static final String</find>
+      <find>userConfigFolder</find>
     </findStrings>
   </component>
   <component name="GOROOT" path="$PROJECT_DIR$/../../../../../../apps/go" />
@@ -99,6 +142,14 @@
               <item name="Go Modules &lt;github.com/nealwon/go-flutter-plugin-sqlite&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
               <item name="go-sqlite3@v1.9.0" type="462c0819:PsiDirectoryNode" />
               <item name="_example" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="go-flutter-plugin-sqlite" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="Go Modules &lt;github.com/nealwon/go-flutter-plugin-sqlite&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="go-sqlite3@v1.9.0" type="462c0819:PsiDirectoryNode" />
+              <item name="_example" type="462c0819:PsiDirectoryNode" />
+              <item name="simple" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -177,21 +228,51 @@
         <state relative-caret-position="-1269" />
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../apps/go/src/database/sql/convert.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3173">
+          <caret line="216" column="29" lean-forward="true" selection-start-line="216" selection-start-column="29" selection-end-line="216" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../../../../../../work/pkg/mod/github.com/mattn/go-sqlite3@v1.9.0/_example/simple/simple.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-411" />
+        <state relative-caret-position="306">
+          <caret line="54" column="23" selection-start-line="54" selection-start-column="19" selection-end-line="54" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../../../apps/go/src/database/sql/sql.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="349">
+          <caret line="2954" column="26" selection-start-line="2954" selection-start-column="26" selection-end-line="2954" selection-end-column="26" />
+          <folding>
+            <element signature="e#81847#81916#0" expanded="true" />
+          </folding>
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/plugin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="425">
-          <caret line="212" selection-start-line="212" selection-end-line="212" />
+        <state relative-caret-position="-85">
+          <caret line="243" column="90" selection-start-line="243" selection-start-column="90" selection-end-line="243" selection-end-column="90" />
           <folding>
             <element signature="e#23#223#0" expanded="true" />
-            <element signature="e#1037#1047#0" expanded="true" />
-            <element signature="n#!!block;n#handleBatch#3" />
-            <element signature="n#!!block;n#handleCloseDatabase#1" />
-            <element signature="e#6825#6927#0" expanded="true" />
+            <element signature="e#1078#1088#0" expanded="true" />
+            <element signature="n#!!block;n#handleGetPlatformVersion#0" />
+            <element signature="n#!!block;n#handleGetDatabasePath#0" />
+            <element signature="n#!!block;n#handleOptions#0" />
+            <element signature="n#!!block;n#handleCloseDatabase#0" />
+            <element signature="n#!!block;n#handleOpenDatabase#0" />
+            <element signature="n#!!block;n#handleTempDir#0" />
+            <element signature="n#!!block;n#handleAppDir#0" />
+            <element signature="n#!!block;n#handleBatch#1" />
+            <element signature="n#!!block;n#handleExecute#0" />
+            <element signature="n#!!block;n#handleExecute#1" />
+            <element signature="n#!!block;n#handleExecute#2" />
+            <element signature="n#!!block;n#handleDeleteDatabase#0" />
+            <element signature="e#6988#6993#0" />
+            <element signature="e#8234#8239#0" />
           </folding>
         </state>
       </provider>
