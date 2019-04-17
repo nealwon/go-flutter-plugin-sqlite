@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter"
@@ -84,6 +85,7 @@ type SqflitePlugin struct {
 var _ flutter.Plugin = &SqflitePlugin{} // compile-time type check
 
 func NewSqflitePlugin(vendor, appName string) *SqflitePlugin {
+	log.SetFlags(log.Lshortfile|log.LstdFlags)
 	return &SqflitePlugin{
 		VendorName:      vendor,
 		ApplicationName: appName,
@@ -197,6 +199,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		log.Printf(errorFormat, "invalid dbpath")
 		return nil, errors.New("invalid dbpath")
 	}
+	log.Println("dbpath=", dbpath)
 	if readOnly {
 		log.Printf(errorFormat, "readonly not supported")
 	}
@@ -234,15 +237,16 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
+	log.Println("sql=", sqlStr, "args=", args)
 	if err != nil {
 		return nil, err
 	}
-	result, err := db.Exec(sqlStr, args)
+	result, err := db.Exec(sqlStr, args...)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return result.LastInsertId()
 }
@@ -263,6 +267,9 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	operations, ok := ioperations.([]map[string]interface{})
 	if !ok {
 		return nil, errors.New("invalid operation data format")
+	}
+	if err!=nil{
+		return nil,err
 	}
 	for _, operate := range operations {
 		mtd, ok := operate[PARAM_METHOD]
@@ -307,16 +314,23 @@ func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{
 func (p *SqflitePlugin) handleExecute(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
+		log.Println("err=", err)
 		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
+	log.Println("sql=", sqlStr, "args=", args)
 	if err != nil {
+		log.Println("err=", err)
 		return nil, err
 	}
-	_, err = db.Exec(sqlStr, args...)
-	if err != nil {
+	var r sql.Result
+	r, err = db.Exec(sqlStr, args...)
+	log.Printf("result=%#v err=%v\n", r, err)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		log.Println("sql=",sqlStr, "err=", err)
 		return nil, err
 	}
+
 	return nil, nil
 }
 
@@ -326,6 +340,7 @@ func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, 
 		return 0, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
+	log.Println("sql=", sqlStr, "args=", args)
 	if err != nil {
 		return nil, err
 	}
@@ -342,6 +357,7 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
+	log.Println("sql=", sqlStr, "args=", args)
 	if err != nil {
 		return nil, err
 	}
@@ -355,16 +371,30 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 	}
 	var resultRows []interface{}
 	for {
-		var resultRow []interface{}
-		dest := make([]interface{}, len(cols))
-		err = rows.Scan(dest...)
-		for _, cval := range dest {
-			resultRow = append(resultRow, cval)
-		}
-		resultRows = append(resultRows, resultRow)
 		if !rows.Next() {
 			break
 		}
+		var resultRow []interface{}
+		dest := make([]interface{}, len(cols))
+		for k,_:=range cols {
+			var ignore interface{}
+			dest[k] = &ignore
+		}
+		err = rows.Scan(dest...)
+		for _, cval := range dest {
+			var val interface{}
+			val = *cval.(*interface{})
+			var out interface{}
+			switch val.(type) {
+			case []byte:
+				out = string(val.([]byte))
+			default:
+				out = val
+			}
+			resultRow = append(resultRow, out)
+		}
+		//log.Printf("resultrow=%#v\n", resultRow)
+		resultRows = append(resultRows, resultRow)
 	}
 	var icols []interface{}
 	for _, col := range cols {
