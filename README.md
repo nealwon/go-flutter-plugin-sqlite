@@ -1,5 +1,7 @@
 # go-flutter-plugin-sqlite
 
+[![GoDoc](https://godoc.org/github.com/nealwon/go-flutter-plugin-sqlite?status.svg)](https://godoc.org/github.com/nealwon/go-flutter-plugin-sqlite)
+
 This Go package implements the host-side of the Flutter [sqflite](https://pub.dartlang.org/packages/sqflite) plugin.
 
 ## Usage

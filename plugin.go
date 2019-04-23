@@ -1,3 +1,12 @@
+// Package sqflite provides an implementation of flutter sqflite plugin for desktop.
+//
+// Extra dependencies:
+//   github.com/go-flutter-desktop/go-flutter
+//   github.com/go-flutter-desktop/go-flutter/plugin
+//	 github.com/mattn/go-sqlite3
+//   github.com/mitchellh/go-homedir
+//   github.com/pkg/errors
+
 package sqflite
 
 import (
@@ -23,49 +32,49 @@ const channelName = "com.tekartik.sqflite"
 const errorFormat = "[SQFLITE] %v\n"
 
 const (
-	METHOD_GET_PLATFORM_VERSION = "getPlatformVersion";
-	METHOD_GET_DATABASES_PATH   = "getDatabasesPath";
-	METHOD_DEBUG_MODE           = "debugMode";
-	METHOD_OPTIONS              = "options";
-	METHOD_OPEN_DATABASE        = "openDatabase";
-	METHOD_CLOSE_DATABASE       = "closeDatabase";
-	METHOD_INSERT               = "insert";
-	METHOD_EXECUTE              = "execute";
-	METHOD_QUERY                = "query";
-	METHOD_UPDATE               = "update";
-	METHOD_BATCH                = "batch";
-	PARAM_ID                    = "id";
-	PARAM_PATH                  = "path";
+	METHOD_GET_PLATFORM_VERSION = "getPlatformVersion"
+	METHOD_GET_DATABASES_PATH   = "getDatabasesPath"
+	METHOD_DEBUG_MODE           = "debugMode"
+	METHOD_OPTIONS              = "options"
+	METHOD_OPEN_DATABASE        = "openDatabase"
+	METHOD_CLOSE_DATABASE       = "closeDatabase"
+	METHOD_INSERT               = "insert"
+	METHOD_EXECUTE              = "execute"
+	METHOD_QUERY                = "query"
+	METHOD_UPDATE               = "update"
+	METHOD_BATCH                = "batch"
+	PARAM_ID                    = "id"
+	PARAM_PATH                  = "path"
 	// when opening a database
-	PARAM_READ_ONLY       = "readOnly";       // boolean
-	PARAM_SINGLE_INSTANCE = "singleInstance"; // boolean
+	PARAM_READ_ONLY       = "readOnly"       // boolean
+	PARAM_SINGLE_INSTANCE = "singleInstance" // boolean
 	// Result when opening a database
-	PARAM_RECOVERED         = "recovered";
-	PARAM_QUERY_AS_MAP_LIST = "queryAsMapList"; // boolean
+	PARAM_RECOVERED         = "recovered"
+	PARAM_QUERY_AS_MAP_LIST = "queryAsMapList" // boolean
 
-	PARAM_SQL               = "sql";
-	PARAM_SQL_ARGUMENTS     = "arguments";
-	PARAM_NO_RESULT         = "noResult";
-	PARAM_CONTINUE_OR_ERROR = "continueOnError";
+	PARAM_SQL               = "sql"
+	PARAM_SQL_ARGUMENTS     = "arguments"
+	PARAM_NO_RESULT         = "noResult"
+	PARAM_CONTINUE_OR_ERROR = "continueOnError"
 
 	// in batch
-	PARAM_OPERATIONS = "operations";
+	PARAM_OPERATIONS = "operations"
 	// in each operation
-	PARAM_METHOD = "method";
+	PARAM_METHOD = "method"
 
 	// Batch operation results
-	PARAM_RESULT          = "result";
-	PARAM_ERROR           = "error"; // map with code/message/data
-	PARAM_ERROR_CODE      = "code";
-	PARAM_ERROR_MESSAGE   = "message";
-	PARAM_ERROR_DATA      = "data";
-	SQLITE_ERROR          = "sqlite_error";    // code
-	ERROR_BAD_PARAM       = "bad_param";       // internal only
-	ERROR_OPEN_FAILED     = "open_failed";     // msg
-	ERROR_DATABASE_CLOSED = "database_closed"; // msg
+	PARAM_RESULT          = "result"
+	PARAM_ERROR           = "error" // map with code/message/data
+	PARAM_ERROR_CODE      = "code"
+	PARAM_ERROR_MESSAGE   = "message"
+	PARAM_ERROR_DATA      = "data"
+	SQLITE_ERROR          = "sqlite_error"    // code
+	ERROR_BAD_PARAM       = "bad_param"       // internal only
+	ERROR_OPEN_FAILED     = "open_failed"     // msg
+	ERROR_DATABASE_CLOSED = "database_closed" // msg
 
 	// memory database path
-	MEMORY_DATABASE_PATH = ":memory:";
+	MEMORY_DATABASE_PATH = ":memory:"
 )
 
 type SqflitePlugin struct {
@@ -80,12 +89,14 @@ type SqflitePlugin struct {
 	databaseId       int32             // store max database id
 
 	queryAsMapList bool
+	debug          bool // debug mode
 }
 
 var _ flutter.Plugin = &SqflitePlugin{} // compile-time type check
 
+// NewSqflitePlugin initialize the plugin
 func NewSqflitePlugin(vendor, appName string) *SqflitePlugin {
-	log.SetFlags(log.Lshortfile|log.LstdFlags)
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	return &SqflitePlugin{
 		VendorName:      vendor,
 		ApplicationName: appName,
@@ -123,6 +134,9 @@ func (p *SqflitePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 			p.userConfigFolder = filepath.Join(home, ".config")
 		}
 	}
+	if p.debug {
+		log.Println("home dir=", p.userConfigFolder)
+	}
 
 	channel := plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	channel.HandleFunc(METHOD_INSERT, p.handleInsert)
@@ -150,6 +164,7 @@ func (p *SqflitePlugin) handleGetDatabasePath(arguments interface{}) (reply inte
 	return p.userConfigFolder, nil
 }
 
+// Not implemented
 func (p *SqflitePlugin) handleOptions(arguments interface{}) (reply interface{}, err error) {
 	var args map[string]interface{}
 	var ok bool
@@ -160,7 +175,7 @@ func (p *SqflitePlugin) handleOptions(arguments interface{}) (reply interface{},
 	if ok {
 		p.queryAsMapList = paramAsList.(bool)
 	}
-	return filepath.Join(p.userConfigFolder, p.VendorName, p.ApplicationName), nil
+	return nil, nil
 }
 
 func (p *SqflitePlugin) handleCloseDatabase(arguments interface{}) (reply interface{}, err error) {
@@ -240,7 +255,9 @@ func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, 
 		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
-	log.Println("sql=", sqlStr, "args=", args)
+	if p.debug {
+		log.Println("sql=", sqlStr, "args=", args)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -268,8 +285,8 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	if !ok {
 		return nil, errors.New("invalid operation data format")
 	}
-	if err!=nil{
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 	for _, operate := range operations {
 		mtd, ok := operate[PARAM_METHOD]
@@ -307,6 +324,19 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 }
 
 func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{}, err error) {
+	var args map[interface{}]interface{}
+	var ok bool
+	if args, ok = arguments.(map[interface{}]interface{}); !ok {
+		return nil, errors.New("Invalid argument type")
+	}
+	v, ok := args[METHOD_DEBUG_MODE]
+	if !ok {
+		return nil, nil
+	}
+	switch v.(type) {
+	case bool:
+		p.debug = v.(bool)
+	}
 	// do nothing now
 	return nil, nil
 }
@@ -314,20 +344,21 @@ func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{
 func (p *SqflitePlugin) handleExecute(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		log.Println("err=", err)
 		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
-	log.Println("sql=", sqlStr, "args=", args)
+	if p.debug {
+		log.Println("sql=", sqlStr, "args=", args)
+	}
 	if err != nil {
-		log.Println("err=", err)
 		return nil, err
 	}
 	var r sql.Result
 	r, err = db.Exec(sqlStr, args...)
-	log.Printf("result=%#v err=%v\n", r, err)
+	if p.debug {
+		log.Printf("result=%#v err=%v\n", r, err)
+	}
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		log.Println("sql=",sqlStr, "err=", err)
 		return nil, err
 	}
 
@@ -340,7 +371,9 @@ func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, 
 		return 0, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
-	log.Println("sql=", sqlStr, "args=", args)
+	if p.debug {
+		log.Println("sql=", sqlStr, "args=", args)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +390,9 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 		return nil, err
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
-	log.Println("sql=", sqlStr, "args=", args)
+	if p.debug {
+		log.Println("sql=", sqlStr, "args=", args)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +411,7 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 		}
 		var resultRow []interface{}
 		dest := make([]interface{}, len(cols))
-		for k,_:=range cols {
+		for k, _ := range cols {
 			var ignore interface{}
 			dest[k] = &ignore
 		}
