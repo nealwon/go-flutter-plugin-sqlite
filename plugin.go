@@ -324,7 +324,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 				errResult, err := makeError(err)
 				if !continueOnError {
 					return errResult, err
-				}else{
+				} else {
 					results = append(results, errResult)
 					continue
 				}
@@ -340,7 +340,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 				errResult, err := makeError(err)
 				if !continueOnError {
 					return errResult, err
-				}else{
+				} else {
 					results = append(results, errResult)
 					continue
 				}
@@ -355,7 +355,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 				errResult, err := makeError(err)
 				if !continueOnError {
 					return errResult, err
-				}else{
+				} else {
 					results = append(results, errResult)
 					continue
 				}
@@ -369,7 +369,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 				errResult, err := makeError(err)
 				if !continueOnError {
 					return errResult, err
-				}else{
+				} else {
 					results = append(results, errResult)
 					continue
 				}
@@ -390,7 +390,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	}
 }
 
-func (p *SqflitePlugin) createBatchOperationResult(result interface{}) (map[interface{}]interface{}) {
+func (p *SqflitePlugin) createBatchOperationResult(result interface{}) map[interface{}]interface{} {
 	out := map[interface{}]interface{}{}
 	out[PARAM_RESULT] = result
 	return out
@@ -408,7 +408,6 @@ func makeError(err error) (map[interface{}]interface{}, error) {
 	fmt.Println("error map", result)
 	return result, err
 }
-
 
 func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{}, err error) {
 	var v bool
@@ -575,14 +574,14 @@ func (p *SqflitePlugin) getRowsReply(rows *sql.Rows) (rowsReply interface{}, err
 			val = *cval.(*interface{})
 			var out interface{}
 
-			if (val == nil){
+			if val == nil {
 				out = nil
-			}else {
+			} else {
 				switch val.(type) {
-					case []byte:
-						out = string(val.([]byte))
-					default:
-						out = val
+				case []byte:
+					out = string(val.([]byte))
+				default:
+					out = val
 				}
 			}
 			resultRow = append(resultRow, out)
