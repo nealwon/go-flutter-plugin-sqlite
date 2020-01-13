@@ -133,6 +133,8 @@ func (p *SqflitePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 			p.userConfigFolder = filepath.Join(home, ".config")
 		}
 	}
+	p.userConfigFolder = filepath.Join(p.userConfigFolder, p.VendorName, p.ApplicationName)
+
 	if p.debug {
 		log.Println("home dir=", p.userConfigFolder)
 	}
