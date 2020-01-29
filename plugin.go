@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -220,7 +219,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		log.Printf(errorFormat, "readonly not supported")
 	}
 	if MEMORY_DATABASE_PATH != dbpath {
-		err = os.MkdirAll(path.Dir(dbpath), 0755)
+		err = os.MkdirAll(filepath.Dir(dbpath), os.ModePerm)
 		if err != nil {
 			log.Printf(errorFormat, err.Error())
 		}
