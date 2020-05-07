@@ -1,3 +1,7 @@
+# NO LONGER MAINTAINED
+
+This has only been tested with sqflite version 1.1.7+3 on Linux and Windows.
+
 # go-flutter-plugin-sqlite
 
 [![GoDoc](https://godoc.org/github.com/nealwon/go-flutter-plugin-sqlite?status.svg)](https://godoc.org/github.com/nealwon/go-flutter-plugin-sqlite)
