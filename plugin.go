@@ -14,10 +14,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter"
@@ -221,7 +219,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		log.Printf(errorFormat, "readonly not supported")
 	}
 	if MEMORY_DATABASE_PATH != dbpath {
-		err = os.MkdirAll(path.Dir(dbpath), 0755)
+		err = os.MkdirAll(filepath.Dir(dbpath), os.ModePerm)
 		if err != nil {
 			log.Printf(errorFormat, err.Error())
 		}
@@ -238,8 +236,13 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 	var engine *sql.DB
 	engine, err = sql.Open("sqlite3", dbpath)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
+	_, err = engine.Exec("VACUUM")
+	if err != nil {
+		return makeError(err)
+	}
+
 	p.Lock()
 	defer p.Unlock()
 	p.databaseId++
@@ -254,14 +257,14 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
 	if p.debug {
 		log.Println("sql=", sqlStr, "args=", args)
 	}
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	result, err := db.Exec(sqlStr, args...)
 	if err != nil {
@@ -273,72 +276,147 @@ func (p *SqflitePlugin) handleInsert(arguments interface{}) (reply interface{}, 
 func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
-	args, ok := arguments.(map[string]interface{})
+	args, ok := arguments.(map[interface{}]interface{})
 	if !ok {
-		return nil, errors.New("invalid args")
+		return makeError(errors.New("invalid args"))
 	}
 	ioperations, ok := args[PARAM_OPERATIONS]
 	if !ok {
-		return nil, errors.New("invalid operation")
+		return makeError(errors.New("invalid operation"))
 	}
-	operations, ok := ioperations.([]map[string]interface{})
+	operations, ok := ioperations.([]interface{})
 	if !ok {
-		return nil, errors.New("invalid operation data format")
+		return makeError(errors.New("invalid operation data format"))
 	}
-	if err != nil {
-		return nil, err
+	var noResult = false
+	val, ok := args[PARAM_NO_RESULT]
+	if ok {
+		noResult = val.(bool)
 	}
+	var continueOnError = false
+	val, ok = args[PARAM_CONTINUE_OR_ERROR]
+	if ok {
+		continueOnError = val.(bool)
+	}
+
+	var results []interface{}
 	for _, operate := range operations {
-		mtd, ok := operate[PARAM_METHOD]
+		mtd, ok := operate.(map[interface{}]interface{})[PARAM_METHOD]
 		if !ok {
-			return nil, errors.New("empty method")
+			return makeError(errors.New("empty method"))
 		}
 		method, ok := mtd.(string)
 		if !ok {
-			return nil, errors.New("invalid method")
+			return makeError(errors.New("invalid method"))
 		}
 		sqlStr, xargs, err := p.getSqlCommand(operate)
 		if err != nil {
-			return nil, err
+			return makeError(err)
 		}
 		switch method {
-		case METHOD_UPDATE:
-			fallthrough
+
 		case METHOD_INSERT:
-			fallthrough
+			result, err := db.Exec(sqlStr, xargs...)
+			if err != nil {
+				errResult, err := makeError(err)
+				if !continueOnError {
+					return errResult, err
+				} else {
+					results = append(results, errResult)
+					continue
+				}
+			}
+			if !noResult {
+				id, _ := result.LastInsertId()
+				results = append(results, p.createBatchOperationResult(id))
+			}
+
+		case METHOD_UPDATE:
+			result, err := db.Exec(sqlStr, xargs...)
+			if err != nil {
+				errResult, err := makeError(err)
+				if !continueOnError {
+					return errResult, err
+				} else {
+					results = append(results, errResult)
+					continue
+				}
+			}
+			if !noResult {
+				rowsAffected, _ := result.RowsAffected()
+				results = append(results, p.createBatchOperationResult(rowsAffected))
+			}
 		case METHOD_EXECUTE:
 			_, err = db.Exec(sqlStr, xargs...)
 			if err != nil {
-				return nil, err
+				errResult, err := makeError(err)
+				if !continueOnError {
+					return errResult, err
+				} else {
+					results = append(results, errResult)
+					continue
+				}
+			}
+			if !noResult {
+				results = append(results, p.createBatchOperationResult(nil))
 			}
 		case METHOD_QUERY:
-			_, err = db.Query(sqlStr, xargs...)
+			rows, err := db.Query(sqlStr, xargs...)
 			if err != nil {
-				return nil, err
+				errResult, err := makeError(err)
+				if !continueOnError {
+					return errResult, err
+				} else {
+					results = append(results, errResult)
+					continue
+				}
 			}
+			rowsReply, err := p.getRowsReply(rows)
+			if !noResult {
+				results = append(results, p.createBatchOperationResult(rowsReply))
+			}
+
 		default:
-			return nil, errors.New("Invalid batch param")
+			return makeError(errors.New("Invalid batch param"))
 		}
 	}
-	return nil, nil
+	if noResult {
+		return nil, nil
+	} else {
+		return results, nil
+	}
+}
+
+func (p *SqflitePlugin) createBatchOperationResult(result interface{}) map[interface{}]interface{} {
+	out := map[interface{}]interface{}{}
+	out[PARAM_RESULT] = result
+	return out
+}
+
+func makeError(err error) (map[interface{}]interface{}, error) {
+	result := map[interface{}]interface{}{}
+
+	errDetail := map[interface{}]interface{}{}
+	errDetail["code"] = "sqlite_error"
+	errDetail["message"] = err.Error()
+	errDetail["data"] = "data"
+
+	result["error"] = errDetail
+	fmt.Println("error map", result)
+	return result, err
 }
 
 func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{}, err error) {
-	var args map[interface{}]interface{}
+	var v bool
 	var ok bool
-	if args, ok = arguments.(map[interface{}]interface{}); !ok {
-		return nil, errors.New("Invalid argument type")
+	if v, ok = arguments.(bool); !ok {
+		return makeError(errors.New("Invalid argument type"))
 	}
-	v, ok := args[METHOD_DEBUG_MODE]
-	if !ok {
-		return nil, nil
-	}
-	switch v.(type) {
-	case bool:
-		p.debug = v.(bool)
-	}
+
+	p.debug = v
+
 	// do nothing now
 	return nil, nil
 }
@@ -346,22 +424,22 @@ func (p *SqflitePlugin) handleDebugMode(arguments interface{}) (reply interface{
 func (p *SqflitePlugin) handleExecute(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
 	if p.debug {
 		log.Println("sql=", sqlStr, "args=", args)
 	}
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	var r sql.Result
 	r, err = db.Exec(sqlStr, args...)
 	if p.debug {
 		log.Printf("result=%#v err=%v\n", r, err)
 	}
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		return nil, err
+	if err != nil {
+		return makeError(err)
 	}
 
 	return nil, nil
@@ -377,7 +455,7 @@ func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, 
 		log.Println("sql=", sqlStr, "args=", args)
 	}
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	result, err := db.Exec(sqlStr, args...)
 	if err != nil {
@@ -389,58 +467,20 @@ func (p *SqflitePlugin) handleUpdate(arguments interface{}) (reply interface{}, 
 func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, err error) {
 	_, db, err := p.getDatabase(arguments)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	sqlStr, args, err := p.getSqlCommand(arguments)
 	if p.debug {
 		log.Println("sql=", sqlStr, "args=", args)
 	}
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
 	rows, err := db.Query(sqlStr, args...)
 	if err != nil {
-		return nil, err
+		return makeError(err)
 	}
-	cols, err := rows.Columns()
-	if err != nil {
-		return nil, err
-	}
-	var resultRows []interface{}
-	for {
-		if !rows.Next() {
-			break
-		}
-		var resultRow []interface{}
-		dest := make([]interface{}, len(cols))
-		for k, _ := range cols {
-			var ignore interface{}
-			dest[k] = &ignore
-		}
-		err = rows.Scan(dest...)
-		for _, cval := range dest {
-			var val interface{}
-			val = *cval.(*interface{})
-			var out interface{}
-			switch val.(type) {
-			case []byte:
-				out = string(val.([]byte))
-			default:
-				out = val
-			}
-			resultRow = append(resultRow, out)
-		}
-		//log.Printf("resultrow=%#v\n", resultRow)
-		resultRows = append(resultRows, resultRow)
-	}
-	var icols []interface{}
-	for _, col := range cols {
-		icols = append(icols, col)
-	}
-	return map[interface{}]interface{}{
-		"columns": icols,
-		"rows":    resultRows,
-	}, nil
+	return p.getRowsReply(rows)
 }
 
 func (p *SqflitePlugin) handleDatabaseExists(arguments interface{}) (reply interface{}, err error) {
@@ -453,7 +493,7 @@ func (p *SqflitePlugin) handleDeleteDatabase(arguments interface{}) (reply inter
 			err = os.Remove(dbPath)
 		}
 	}
-	return nil, err
+	return makeError(err)
 }
 
 func (p *SqflitePlugin) getDatabase(arguments interface{}) (int32, *sql.DB, error) {
@@ -509,4 +549,51 @@ func (p *SqflitePlugin) getSqlCommand(arguments interface{}) (sqlStr string, xar
 		xargs, _ = targs.([]interface{})
 	}
 	return
+}
+
+func (p *SqflitePlugin) getRowsReply(rows *sql.Rows) (rowsReply interface{}, err error) {
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	var resultRows []interface{}
+	for {
+		if !rows.Next() {
+			break
+		}
+		var resultRow []interface{}
+		dest := make([]interface{}, len(cols))
+		for k, _ := range cols {
+			var ignore interface{}
+			dest[k] = &ignore
+		}
+		err = rows.Scan(dest...)
+		for _, cval := range dest {
+			var val interface{}
+			val = *cval.(*interface{})
+			var out interface{}
+
+			if val == nil {
+				out = nil
+			} else {
+				switch val.(type) {
+				case []byte:
+					out = string(val.([]byte))
+				default:
+					out = val
+				}
+			}
+			resultRow = append(resultRow, out)
+		}
+		//log.Printf("resultrow=%#v\n", resultRow)
+		resultRows = append(resultRows, resultRow)
+	}
+	var icols []interface{}
+	for _, col := range cols {
+		icols = append(icols, col)
+	}
+	return map[interface{}]interface{}{
+		"columns": icols,
+		"rows":    resultRows,
+	}, nil
 }
