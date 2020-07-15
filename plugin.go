@@ -191,7 +191,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 	var ok bool
 	var args map[interface{}]interface{}
 	if args, ok = arguments.(map[interface{}]interface{}); !ok {
-		return nil, errors.New("invalid arguments")
+		return nil, newError("invalid arguments")
 	}
 
 	var dbpath string
@@ -199,14 +199,13 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		dbpath = dpath.(string)
 	}
 	if dbpath == "" {
-		log.Printf(errorFormat, "dbpath is empty")
-		return nil, errors.New("dbpath is empty")
+		return nil, newError("dbpath is empty")
 	}
 
 	// check that the path contains parameters
 	chunks := strings.Split(dbpath, "?")
 	if len(chunks) != 2 {
-		return nil, errors.New("db parameters are missing")
+		return nil, newError("db parameters are missing")
 	}
 	dbPathWithoutParams := chunks[0]
 
@@ -220,7 +219,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		}
 	}
 	if !keyFound {
-		return nil, errors.New("db key is missing")
+		return nil, newError("db key is missing")
 	}
 
 	log.Println("db path without params =", dbPathWithoutParams)
@@ -240,7 +239,7 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 	if MEMORY_DATABASE_PATH != dbpath {
 		err = os.MkdirAll(path.Dir(dbpath), 0755)
 		if err != nil {
-			log.Printf(errorFormat, err.Error())
+			return nil, newError(err.Error())
 		}
 	}
 	if singleInstance {
@@ -528,4 +527,9 @@ func (p *SqflitePlugin) getSqlCommand(arguments interface{}) (sqlStr string, xar
 		xargs, _ = targs.([]interface{})
 	}
 	return
+}
+
+func newError(message string) error {
+	log.Printf(errorFormat, message)
+	return errors.New(message)
 }
