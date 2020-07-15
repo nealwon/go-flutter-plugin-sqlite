@@ -101,10 +101,10 @@ func NewSqflitePlugin(vendor, appName string) *SqflitePlugin {
 
 func (p *SqflitePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	if p.VendorName == "" {
-		return errors.New("SqflitePlugin.VendorName must be set")
+		return newError("SqflitePlugin.VendorName must be set")
 	}
 	if p.ApplicationName == "" {
-		return errors.New("SqflitePlugin.ApplicationName must be set")
+		return newError("SqflitePlugin.ApplicationName must be set")
 	}
 
 	switch runtime.GOOS {
