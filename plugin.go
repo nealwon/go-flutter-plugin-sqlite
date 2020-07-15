@@ -1,11 +1,5 @@
-// Package sqflite provides an implementation of flutter sqflite plugin for desktop.
-//
-// Extra dependencies:
-//   github.com/go-flutter-desktop/go-flutter
-//   github.com/go-flutter-desktop/go-flutter/plugin
-//	 github.com/mattn/go-sqlite3
-//   github.com/mitchellh/go-homedir
-//   github.com/pkg/errors
+// Package sqflite provides an implementation of flutter sqflite plugin for desktop
+// and uses sqlcipher for transparent db ancryption.
 
 package sqflite
 
@@ -22,9 +16,9 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	_ "github.com/xeodou/go-sqlcipher"
 )
 
 const channelName = "com.tekartik.sqflite"
@@ -136,9 +130,7 @@ func (p *SqflitePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	}
 	p.userConfigFolder = filepath.Join(p.userConfigFolder, p.VendorName, p.ApplicationName)
 
-	if p.debug {
-		log.Println("home dir=", p.userConfigFolder)
-	}
+	log.Println("home dir=", p.userConfigFolder)
 
 	channel := plugin.NewMethodChannel(messenger, channelName, plugin.StandardMethodCodec{})
 	channel.HandleFunc(METHOD_INSERT, p.handleInsert)
@@ -193,30 +185,55 @@ func (p *SqflitePlugin) handleCloseDatabase(arguments interface{}) (reply interf
 	return nil, err
 }
 
+// Opens the db and passes the options.
+// arguments is a map of options, see PARAM_* constants.
 func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interface{}, err error) {
-	// map[interface {}]interface {}{"path":"/Users/kael/Library/Application Support/libCachedImageData.db", "singleInstance":true}
 	var ok bool
 	var args map[interface{}]interface{}
 	if args, ok = arguments.(map[interface{}]interface{}); !ok {
 		return nil, errors.New("invalid arguments")
 	}
+
 	var dbpath string
-	var readOnly bool
-	var singleInstance bool
 	if dpath, ok := args[PARAM_PATH]; ok {
 		dbpath = dpath.(string)
 	}
+	if dbpath == "" {
+		log.Printf(errorFormat, "dbpath is empty")
+		return nil, errors.New("dbpath is empty")
+	}
+
+	// check that the path contains parameters
+	chunks := strings.Split(dbpath, "?")
+	if len(chunks) != 2 {
+		return nil, errors.New("db parameters are missing")
+	}
+	dbPathWithoutParams := chunks[0]
+
+	// check that the parameters contain _key and it is not empty
+	chunks = strings.Split(chunks[1], "&")
+	var keyFound bool
+	for _, v := range chunks {
+		if strings.Index(v, "_key=") == 0 {
+			keyFound = len(v[5:]) > 0
+			break
+		}
+	}
+	if !keyFound {
+		return nil, errors.New("db key is missing")
+	}
+
+	log.Println("db path without params =", dbPathWithoutParams)
+
+	var readOnly bool
+	var singleInstance bool
+
 	if rdo, ok := args[PARAM_READ_ONLY]; ok {
 		readOnly = rdo.(bool)
 	}
 	if si, ok := args[PARAM_SINGLE_INSTANCE]; ok {
 		singleInstance = si.(bool) && MEMORY_DATABASE_PATH != dbpath
 	}
-	if dbpath == "" {
-		log.Printf(errorFormat, "invalid dbpath")
-		return nil, errors.New("invalid dbpath")
-	}
-	log.Println("dbpath=", dbpath)
 	if readOnly {
 		log.Printf(errorFormat, "readonly not supported")
 	}
@@ -235,6 +252,8 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 			}, nil
 		}
 	}
+
+	// dbpath is supposed to contain _key parameter, or the db will fail to open
 	var engine *sql.DB
 	engine, err = sql.Open("sqlite3", dbpath)
 	if err != nil {
@@ -413,7 +432,7 @@ func (p *SqflitePlugin) handleQuery(arguments interface{}) (reply interface{}, e
 		}
 		var resultRow []interface{}
 		dest := make([]interface{}, len(cols))
-		for k, _ := range cols {
+		for k := range cols {
 			var ignore interface{}
 			dest[k] = &ignore
 		}
