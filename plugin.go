@@ -202,8 +202,6 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		return nil, newError("dbpath is empty")
 	}
 
-	log.Println("dbpath = ", dbpath)
-
 	// check that the path contains parameters
 	chunks := strings.Split(dbpath, "?")
 	if len(chunks) != 2 {
@@ -304,7 +302,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	if !ok {
 		return nil, errors.New("invalid operation")
 	}
-	operations, ok := ioperations.([]map[string]interface{})
+	operations, ok := ioperations.([]map[interface{}]interface{})
 	if !ok {
 		return nil, errors.New("invalid operation data format")
 	}
