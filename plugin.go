@@ -295,6 +295,7 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	if err != nil {
 		return nil, err
 	}
+	log.Println("HANDLE BATCH", arguments)
 	args, ok := arguments.(map[string]interface{})
 	if !ok {
 		return nil, errors.New("invalid args")
