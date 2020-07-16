@@ -302,15 +302,19 @@ func (p *SqflitePlugin) handleBatch(arguments interface{}) (reply interface{}, e
 	if !ok {
 		return nil, errors.New("invalid operation")
 	}
-	operations, ok := ioperations.([]map[interface{}]interface{})
+	operations, ok := ioperations.([]interface{})
 	if !ok {
-		return nil, errors.New("invalid operation data format")
+		return nil, errors.New("invalid operations data format: a list is expected")
 	}
 	if err != nil {
 		return nil, err
 	}
 	for _, operate := range operations {
-		mtd, ok := operate[PARAM_METHOD]
+		params, ok := operate.(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New("invalid operations data format: a list of maps is expected")
+		}
+		mtd, ok := params[PARAM_METHOD]
 		if !ok {
 			return nil, errors.New("empty method")
 		}
