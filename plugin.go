@@ -202,6 +202,8 @@ func (p *SqflitePlugin) handleOpenDatabase(arguments interface{}) (reply interfa
 		return nil, newError("dbpath is empty")
 	}
 
+	log.Println("dbpath = ", dbpath)
+
 	// check that the path contains parameters
 	chunks := strings.Split(dbpath, "?")
 	if len(chunks) != 2 {
